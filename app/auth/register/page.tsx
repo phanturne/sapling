@@ -15,7 +15,7 @@ export default function SignupPage() {
             <div className="mb-4 flex h-16 w-16 items-center justify-center">
               <Image
                 src="/icon-circle.png"
-                alt="nextjs-supabase-template logo"
+                alt="Sapling logo"
                 width={64}
                 height={64}
                 className="h-16 w-16"
@@ -25,7 +25,7 @@ export default function SignupPage() {
               Create your account
             </h1>
             <p className="mt-2 text-center text-sm text-muted-foreground">
-              Join nextjs-supabase-template to start your journey
+              Join Sapling to start your journey
             </p>
           </div>
 

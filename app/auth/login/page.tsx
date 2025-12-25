@@ -22,7 +22,7 @@ export default async function LoginPage({ searchParams }: Props) {
             <div className="mb-4 flex h-16 w-16 items-center justify-center">
               <Image
                 src="/icon-circle.png"
-                alt="nextjs-supabase-template logo"
+                alt="Sapling logo"
                 width={64}
                 height={64}
                 className="h-16 w-16"
@@ -32,7 +32,7 @@ export default async function LoginPage({ searchParams }: Props) {
               Welcome back
             </h1>
             <p className="mt-2 text-center text-sm text-muted-foreground">
-              Log in to your nextjs-supabase-template account
+              Log in to your account
             </p>
           </div>
 

@@ -13,8 +13,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "nextjs-supabase-template",
-  description: "Create AI knowledge spaces",
+  title: "Sapling",
+  description: "Knowledge that grows with you",
 };
 
 export default function RootLayout({
