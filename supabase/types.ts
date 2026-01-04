@@ -7,13 +7,159 @@ export type Json =
   | Json[]
 
 export type Database = {
-  // Allows to automatically instantiate createClient with right options
-  // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
-  __InternalSupabase: {
-    PostgrestVersion: "13.0.5"
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
   }
   public: {
     Tables: {
+      note_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          metadata: Json
+          note_id: string
+          token_count: number | null
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          note_id: string
+          token_count?: number | null
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          note_id?: string
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_chunks_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: false
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      note_summaries: {
+        Row: {
+          created_at: string
+          id: string
+          key_points: string[]
+          note_id: string
+          summary: string
+          topics: string[]
+          updated_at: string
+          word_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_points?: string[]
+          note_id: string
+          summary: string
+          topics?: string[]
+          updated_at?: string
+          word_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_points?: string[]
+          note_id?: string
+          summary?: string
+          topics?: string[]
+          updated_at?: string
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "note_summaries_note_id_fkey"
+            columns: ["note_id"]
+            isOneToOne: true
+            referencedRelation: "notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notes: {
+        Row: {
+          content: string
+          content_hash: string | null
+          created_at: string
+          created_by: string | null
+          embedding_status: string
+          id: string
+          space_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          embedding_status?: string
+          id?: string
+          space_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          content_hash?: string | null
+          created_at?: string
+          created_by?: string | null
+          embedding_status?: string
+          id?: string
+          space_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notes_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -44,12 +190,195 @@ export type Database = {
         }
         Relationships: []
       }
+      source_chunks: {
+        Row: {
+          chunk_index: number
+          content: string
+          created_at: string
+          embedding: string | null
+          id: string
+          metadata: Json
+          source_id: string
+          token_count: number | null
+        }
+        Insert: {
+          chunk_index: number
+          content: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          source_id: string
+          token_count?: number | null
+        }
+        Update: {
+          chunk_index?: number
+          content?: string
+          created_at?: string
+          embedding?: string | null
+          id?: string
+          metadata?: Json
+          source_id?: string
+          token_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_chunks_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      source_summaries: {
+        Row: {
+          created_at: string
+          id: string
+          key_points: string[]
+          source_id: string
+          summary: string
+          topics: string[]
+          updated_at: string
+          word_count: number | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key_points?: string[]
+          source_id: string
+          summary: string
+          topics?: string[]
+          updated_at?: string
+          word_count?: number | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key_points?: string[]
+          source_id?: string
+          summary?: string
+          topics?: string[]
+          updated_at?: string
+          word_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_summaries_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: true
+            referencedRelation: "sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sources: {
+        Row: {
+          content: string | null
+          created_at: string
+          file_path: string | null
+          file_size: number | null
+          file_type: string | null
+          id: string
+          metadata: Json
+          source_type: string
+          source_url: string | null
+          space_id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          metadata?: Json
+          source_type?: string
+          source_url?: string | null
+          space_id: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          file_path?: string | null
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          metadata?: Json
+          source_type?: string
+          source_url?: string | null
+          space_id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sources_space_id_fkey"
+            columns: ["space_id"]
+            isOneToOne: false
+            referencedRelation: "spaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spaces: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          title: string
+          updated_at: string
+          user_id: string
+          visibility: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title: string
+          updated_at?: string
+          user_id: string
+          visibility?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          title?: string
+          updated_at?: string
+          user_id?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      search_space_content: {
+        Args: {
+          match_count?: number
+          match_threshold?: number
+          query_embedding: string
+          space_id_param: string
+        }
+        Returns: {
+          chunk_id: string
+          content: string
+          content_id: string
+          content_type: string
+          similarity: number
+          title: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
@@ -178,7 +507,11 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
 } as const
+
