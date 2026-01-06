@@ -32,7 +32,32 @@ This document provides guidance for AI assistants working on the Sapling codebas
 - **Server Components by default**: All components are Server Components unless marked with `"use client"`
 - **Server Actions**: Use `"use server"` directive for form handlers and mutations
 - **File-based routing**: Routes are defined by the file system in `app/`
-- **Route handlers**: Use `route.ts` files for API endpoints (when needed)
+- **API Routes**: Only use `route.ts` files for streaming responses (AI chat), long-running operations (studio tools), or external integrations (webhooks, OAuth)
+- **CRUD Operations**: Use Server Components + Server Actions, NOT API routes
+
+### Architecture Decision: Server Components + Server Actions vs API Routes
+
+**Use Server Components + Server Actions for:**
+
+- All CRUD operations (spaces, notes, sources)
+- File uploads
+- Form submissions
+- Data fetching for initial page loads
+
+**Use API Routes for:**
+
+- Streaming responses (AI chat with Vercel AI SDK)
+- Long-running operations that need progress updates (studio tools)
+- Background job processing
+- External integrations (webhooks, OAuth callbacks)
+
+**Why this pattern?**
+
+- Server Components + Server Actions are the modern Next.js 16 pattern
+- No redundant auth logic (single source of truth)
+- Better type safety and developer experience
+- Simpler codebase (no duplicate CRUD logic)
+- API routes are only needed when Server Actions can't handle the use case (streaming, external integrations)
 
 ### Supabase SSR Pattern
 
@@ -317,6 +342,22 @@ tests/
 
 The project uses Vercel AI SDK for AI-powered features (chat, studio tools).
 
+### When to Use API Routes vs Server Actions
+
+**Use API Routes for:**
+
+- Streaming responses (AI chat, studio tools with streaming)
+- Long-running operations that need progress updates
+- External integrations (webhooks, OAuth callbacks)
+- Background job processing
+
+**Use Server Actions for:**
+
+- Internal CRUD operations (spaces, notes, sources)
+- File uploads
+- Non-streaming AI operations (if any)
+- Form submissions
+
 #### Streaming Responses (API Routes)
 
 For streaming AI responses (e.g., chat), use API routes with Vercel AI SDK:
@@ -345,7 +386,7 @@ export async function POST(request: Request) {
 - **Use streaming for chat**: Prefer `streamText()` for better UX
 - **Error handling**: Handle API errors gracefully with retry logic when appropriate
 - **Rate limiting**: Check user usage limits before processing (see DESIGN.md for limits)
-- **Server Actions for non-streaming**: Use Server Actions for AI operations that don't need streaming (e.g., studio tool generation)
+- **Server Actions for non-streaming**: Use Server Actions for AI operations that don't need streaming
 
 ## Background Jobs
 
@@ -493,24 +534,26 @@ export async function uploadFile(formData: FormData) {
 ## Common Pitfalls to Avoid
 
 1. **Don't mix server and client patterns**: Don't use `"use client"` unnecessarily
-2. **Don't forget RLS**: Always consider RLS policies when querying
-3. **Don't skip type generation**: Regenerate types after schema changes
-4. **Don't forget revalidation**: Always revalidate after mutations
-5. **Don't use client-side redirects in Server Actions**: Use `redirect()` from `next/navigation`
-6. **Don't forget error handling**: Always handle errors and provide user feedback
-7. **Don't use `any` types**: Use proper TypeScript types
-8. **Don't forget authentication checks**: Always verify user in protected actions/pages
+2. **Don't create API routes for internal CRUD**: Use Server Components + Server Actions instead
+3. **Don't forget RLS**: Always consider RLS policies when querying
+4. **Don't skip type generation**: Regenerate types after schema changes
+5. **Don't forget revalidation**: Always revalidate after mutations
+6. **Don't use client-side redirects in Server Actions**: Use `redirect()` from `next/navigation`
+7. **Don't forget error handling**: Always handle errors and provide user feedback
+8. **Don't use `any` types**: Use proper TypeScript types
+9. **Don't forget authentication checks**: Always verify user in protected actions/pages
 
 ## Development Workflow
 
 1. **Database changes**: Create migration → apply locally → generate types
 2. **New features**:
-   - Create Server Actions for form-based operations
-   - Create API routes for streaming/JSON endpoints (AI chat, background jobs)
+   - **CRUD operations**: Use Server Components (fetch data) + Server Actions (mutations)
+   - **Streaming/AI**: Create API routes for streaming responses (AI chat, studio tools)
+   - **Background jobs**: Create API routes for job processing
    - Create pages → Add components → Write tests
 3. **UI components**: Add to `components/ui/` following ShadCN patterns
 4. **Testing**: Write unit tests for validation logic, E2E tests for user flows
-5. **AI features**: Use Vercel AI SDK for streaming, Server Actions for non-streaming
+5. **AI features**: Use Vercel AI SDK in API routes for streaming, Server Actions for non-streaming
 
 ## References
 
