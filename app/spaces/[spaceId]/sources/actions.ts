@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { createClient } from "@/utils/supabase/server";
+import { headers } from "next/headers";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ALLOWED_FILE_TYPES = ["application/pdf", "text/plain", "text/markdown"];
@@ -112,11 +113,14 @@ export async function uploadSource(
       .select()
       .single();
 
-    if (sourceError) {
+    if (sourceError || !source) {
       // Clean up uploaded file
       await supabase.storage.from("sources").remove([uploadData.path]);
       return { success: false, error: "create_failed" };
     }
+
+    // Trigger background processing (fire-and-forget)
+    triggerProcessing(source.id);
 
     revalidatePath(`/spaces/${spaceId}`);
     revalidatePath(`/spaces/${spaceId}/sources`);
@@ -148,15 +152,44 @@ export async function uploadSource(
       .select()
       .single();
 
-    if (sourceError) {
+    if (sourceError || !source) {
       return { success: false, error: "create_failed" };
     }
+
+    // Trigger background processing (fire-and-forget)
+    triggerProcessing(source.id);
 
     revalidatePath(`/spaces/${spaceId}`);
     revalidatePath(`/spaces/${spaceId}/sources`);
     return { success: true };
   } else {
     return { success: false, error: "invalid_source_type" };
+  }
+}
+
+/**
+ * Trigger source processing in the background
+ * Fire-and-forget: we don't wait for the result
+ */
+async function triggerProcessing(sourceId: string) {
+  try {
+    const headersList = await headers();
+    const host = headersList.get("host") || "localhost:3000";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const baseUrl = `${protocol}://${host}`;
+
+    // Fire-and-forget fetch to processing endpoint
+    fetch(`${baseUrl}/api/sources/${sourceId}/process`, {
+      method: "POST",
+      headers: {
+        // Forward cookies for auth
+        cookie: headersList.get("cookie") || "",
+      },
+    }).catch((error) => {
+      console.error("Failed to trigger processing:", error);
+    });
+  } catch (error) {
+    console.error("Failed to trigger processing:", error);
   }
 }
 

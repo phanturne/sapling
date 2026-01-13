@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { SourceList } from "@/components/sources/source-list";
+import { SourceListPolling } from "@/components/sources/source-list-polling";
 import { SourceUpload } from "@/components/sources/source-upload";
 import { createClient } from "@/utils/supabase/server";
 import { uploadSource } from "./actions";
@@ -111,7 +112,12 @@ export default async function SourcesPage({
         </div>
       )}
 
-      <SourceList sources={sources || []} spaceId={spaceId} />
+      <SourceListPolling
+        key={`polling-${sources?.filter((s) => s.status === "processing").length ?? 0}`}
+        hasProcessingSources={sources?.some((s) => s.status === "processing") ?? false}
+      >
+        <SourceList sources={sources || []} spaceId={spaceId} />
+      </SourceListPolling>
     </div>
   );
 }
