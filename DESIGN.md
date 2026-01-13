@@ -352,7 +352,7 @@ $$ LANGUAGE SQL;
 **Endpoints Used:**
 
 1. **Embeddings**: `models/embedding-001` (or latest embedding model)
-2. **Chat**: `models/gemini-pro` (or latest chat model)
+2. **Chat**: `models/gemini-3-flash-preview` (or latest chat model)
 3. **Function Calling**: For RAG retrieval
 
 ### Embedding Generation
@@ -591,7 +591,7 @@ $$;
 
 - **Provider**: Google Gemini API
 - **Models**:
-  - Chat: `gemini-pro` or `gemini-1.5-pro`
+  - Chat: `gemini-3-flash-preview` or `gemini-1.5-pro`
   - Embeddings: `models/embedding-001` or latest
 - **Vector DB**: Supabase pgvector (1536 dimensions for Gemini)
 

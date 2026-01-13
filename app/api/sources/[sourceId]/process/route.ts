@@ -1,4 +1,5 @@
 import { generateEmbeddings } from "@/lib/ai/embeddings";
+import { generateSourceSummary } from "@/lib/ai/summaries";
 import { chunkText } from "@/lib/content/chunking";
 import { extractText } from "@/lib/content/extraction";
 import { createClient } from "@/utils/supabase/server";
@@ -136,6 +137,25 @@ export async function POST(
 
     if (insertError) {
       throw new Error(`Failed to insert chunks: ${insertError.message}`);
+    }
+
+    // Generate summary (non-blocking - if it fails, source is still ready)
+    try {
+      const summaryResult = await generateSourceSummary(textContent, source.title);
+      
+      // Insert or update summary
+      await supabase
+        .from("source_summaries")
+        .upsert({
+          source_id: sourceId,
+          summary: summaryResult.summary,
+          key_points: summaryResult.keyPoints,
+          topics: summaryResult.topics,
+          word_count: wordCount,
+        });
+    } catch (summaryError) {
+      // Log but don't fail the entire processing
+      console.error("Summary generation failed:", summaryError);
     }
 
     // Update source status to ready

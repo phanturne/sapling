@@ -371,7 +371,7 @@ export async function POST(request: Request) {
   const { messages } = await request.json();
 
   const result = streamText({
-    model: google("gemini-pro"),
+    model: google("gemini-3-flash-preview"),
     messages,
     // ... other config
   });
