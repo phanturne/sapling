@@ -1,3 +1,6 @@
+import { AppSidebarWrapper } from "@/components/app-sidebar-wrapper";
+import { ThemeProvider } from "@/components/theme-provider";
+import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
@@ -17,17 +20,26 @@ export const metadata: Metadata = {
   description: "Knowledge that grows with you",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <ThemeProvider defaultTheme="light" storageKey="sapling-theme">
+          <SidebarProvider>
+            <AppSidebarWrapper />
+            <SidebarInset>
+              <div className="flex flex-1 flex-col">
+                {children}
+              </div>
+            </SidebarInset>
+          </SidebarProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
