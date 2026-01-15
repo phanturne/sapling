@@ -2,9 +2,7 @@
 
 import {
   Home,
-  Shapes,
-  Sprout,
-  Telescope,
+  Sprout
 } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
@@ -31,7 +29,7 @@ type AppSidebarProps = {
     name: string | null
     email: string
     avatar: string | null
-  }
+  } | null
   spaces: {
     id: string
     name: string
@@ -64,16 +62,16 @@ export function AppSidebar({
       url: "/",
       icon: Home,
     },
-    {
-      title: "Spaces",
-      url: "/spaces",
-      icon: Shapes,
-    },
-    {
-      title: "Explore",
-      url: "/explore",
-      icon: Telescope,
-    },
+    // {
+    //   title: "Spaces",
+    //   url: "/spaces",
+    //   icon: Shapes,
+    // },
+    // {
+    //   title: "Explore",
+    //   url: "/explore",
+    //   icon: Telescope,
+    // },
   ].map((item) => ({
     ...item,
     isActive:
@@ -134,10 +132,10 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={navMain} />
-        <NavSpaces spaces={spaces} />
+        <NavSpaces spaces={spaces} isAuthenticated={!!user} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={user} />
+        <NavUser user={user ?? null} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

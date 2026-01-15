@@ -1,19 +1,19 @@
 "use client"
 
-import { BadgeCheck, ChevronsUpDown, LogOut, Moon, Sun, User } from "lucide-react"
+import { BadgeCheck, ChevronsUpDown, LogIn, LogOut, Moon, Sun, User } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 import { useTheme } from "@/components/theme-provider"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { SidebarMenu, SidebarMenuButton, SidebarMenuItem, useSidebar } from "@/components/ui/sidebar"
 import { createClient } from "@/utils/supabase/client"
@@ -23,7 +23,7 @@ type NavUserProps = {
     name: string | null
     email: string
     avatar: string | null
-  }
+  } | null
 }
 
 export function NavUser({ user }: NavUserProps) {
@@ -32,6 +32,81 @@ export function NavUser({ user }: NavUserProps) {
   const router = useRouter()
   const supabase = createClient()
 
+  const themeOptions = [
+    { value: "light", label: "Light", icon: Sun },
+    { value: "dark", label: "Dark", icon: Moon },
+  ] as const
+
+  // Unauthenticated user UI
+  if (!user) {
+    return (
+      <SidebarMenu>
+        <SidebarMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuButton
+                size="lg"
+                className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              >
+                <Avatar className="h-8 w-8 rounded-lg">
+                  <AvatarFallback className="rounded-lg">
+                    <User className="size-4" />
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight">
+                  <span className="truncate font-medium">Guest</span>
+                  <span className="truncate text-xs text-muted-foreground">Not signed in</span>
+                </div>
+                <ChevronsUpDown className="ml-auto size-4" />
+              </SidebarMenuButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+              side={isMobile ? "bottom" : "right"}
+              align="end"
+              sideOffset={4}
+            >
+              <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                  <Link href="/auth/login">
+                    <LogIn className="size-4" />
+                    Sign in
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link href="/auth/register">
+                    <User className="size-4" />
+                    Sign up
+                  </Link>
+                </DropdownMenuItem>
+                <div className="p-1">
+                  <div className="flex items-center rounded-full bg-muted p-1">
+                    {themeOptions.map(({ value, label, icon: Icon }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setTheme(value)}
+                        className={`flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                          theme === value
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        <Icon className="size-4" />
+                        <span>{label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </DropdownMenuGroup>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </SidebarMenuItem>
+      </SidebarMenu>
+    )
+  }
+
+  // Authenticated user UI
   const displayName = user.name || user.email.split("@")[0]
   const initials = displayName.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
 
@@ -39,11 +114,6 @@ export function NavUser({ user }: NavUserProps) {
     await supabase.auth.signOut()
     router.push("/auth/login")
   }
-
-  const themeOptions = [
-    { value: "light", label: "Light", icon: Sun },
-    { value: "dark", label: "Dark", icon: Moon },
-  ] as const
 
   return (
     <SidebarMenu>

@@ -13,8 +13,14 @@ export async function AppSidebarWrapper(props: AppSidebarWrapperProps) {
   const { data: { user: authUser } } = await supabase.auth.getUser()
 
   if (!authUser) {
-    // If no user, return null (sidebar won't show on auth pages)
-    return null
+    // Show sidebar for unauthenticated users with null user and empty spaces
+    return (
+      <AppSidebar
+        user={null}
+        spaces={[]}
+        {...props}
+      />
+    )
   }
 
   // Get profile data
