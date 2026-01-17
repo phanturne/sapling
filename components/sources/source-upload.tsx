@@ -25,22 +25,20 @@ export function SourceUpload({ onUpload, spaceId }: SourceUploadProps) {
     const formData = new FormData(e.currentTarget);
     formData.append("source_type", sourceType);
 
+    const base = `/spaces/${spaceId}/sources`;
+
     try {
       const result = await onUpload(formData);
       if (result.success) {
-        // Reset form before navigation
         formRef.current?.reset();
-        // Navigate to sources page with success message
-        router.push(`/spaces/${spaceId}/sources?success=1`);
+        router.push(`${base}?success=1`);
       } else {
         console.error("Upload failed:", result.error);
-        // Navigate with error message
-        router.push(`/spaces/${spaceId}/sources?error=${result.error}`);
+        router.push(`${base}?error=${result.error}`);
       }
     } catch (error) {
       console.error("Upload failed:", error);
-      // Navigate with error message for unexpected exceptions
-      router.push(`/spaces/${spaceId}/sources?error=upload_failed`);
+      router.push(`${base}?error=upload_failed`);
     } finally {
       setIsUploading(false);
     }

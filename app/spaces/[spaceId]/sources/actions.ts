@@ -193,7 +193,15 @@ async function triggerProcessing(sourceId: string) {
   }
 }
 
-export async function deleteSource(spaceId: string, sourceId: string) {
+export async function deleteSource(
+  spaceId: string,
+  sourceId: string,
+  redirectToOrFormData?: string | FormData
+) {
+  // When used as form action, the 3rd arg is FormData; when called from space page with .bind(spaceId, sourceId, url), it's string.
+  const redirectTo =
+    typeof redirectToOrFormData === "string" ? redirectToOrFormData : undefined;
+
   const supabase = await createClient();
 
   const {
@@ -212,7 +220,11 @@ export async function deleteSource(spaceId: string, sourceId: string) {
     .single();
 
   if (spaceError || !space || space.user_id !== user.id) {
-    redirect(`/spaces/${spaceId}?error=not_found`);
+    const errorTarget =
+      redirectTo != null
+        ? `${redirectTo}?error=not_found`
+        : `/spaces/${spaceId}?error=not_found`;
+    redirect(errorTarget);
   }
 
   // Get source to check for file_path
@@ -224,7 +236,11 @@ export async function deleteSource(spaceId: string, sourceId: string) {
     .single();
 
   if (sourceError || !source) {
-    redirect(`/spaces/${spaceId}/sources?error=not_found`);
+    const errorTarget =
+      redirectTo != null
+        ? `${redirectTo}?error=not_found`
+        : `/spaces/${spaceId}/sources?error=not_found`;
+    redirect(errorTarget);
   }
 
   // Delete file from storage if it exists
@@ -239,11 +255,19 @@ export async function deleteSource(spaceId: string, sourceId: string) {
     .eq("space_id", spaceId);
 
   if (error) {
-    redirect(`/spaces/${spaceId}/sources?error=delete_failed`);
+    const errorTarget =
+      redirectTo != null
+        ? `${redirectTo}?error=delete_failed`
+        : `/spaces/${spaceId}/sources?error=delete_failed`;
+    redirect(errorTarget);
   }
 
   revalidatePath(`/spaces/${spaceId}`);
   revalidatePath(`/spaces/${spaceId}/sources`);
-  redirect(`/spaces/${spaceId}/sources?success=deleted`);
+  const target =
+    redirectTo != null
+      ? `${redirectTo}?success=deleted`
+      : `/spaces/${spaceId}/sources?success=deleted`;
+  redirect(target);
 }
 
