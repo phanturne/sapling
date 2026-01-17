@@ -27,6 +27,28 @@ export default async function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                const storageKey = 'sapling-theme';
+                const defaultTheme = 'light';
+                try {
+                  const storedTheme = localStorage.getItem(storageKey);
+                  const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                  const theme = storedTheme || (systemPrefersDark ? 'dark' : defaultTheme);
+                  document.documentElement.classList.remove('light', 'dark');
+                  document.documentElement.classList.add(theme);
+                } catch (e) {
+                  document.documentElement.classList.remove('light', 'dark');
+                  document.documentElement.classList.add(defaultTheme);
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >

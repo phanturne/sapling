@@ -22,7 +22,7 @@ export function Navbar({
   return (
     <nav
       className={cn(
-        "grid h-14 items-center gap-4 border-b border-border bg-background px-4",
+        "grid h-12 items-center gap-4 bg-background px-4",
         gridCols,
         sticky && "sticky top-0 z-50",
         className

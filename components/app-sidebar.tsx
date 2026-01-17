@@ -24,6 +24,68 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
+const SPACES_SIDEBAR_PREFERENCE_COOKIE = "sidebar_spaces_preference"
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 7 // 7 days
+
+type SidebarPreference = "open" | "closed" | null
+
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null
+  const value = `; ${document.cookie}`
+  const parts = value.split(`; ${name}=`)
+  if (parts.length === 2) return parts.pop()?.split(";").shift() ?? null
+  return null
+}
+
+function setCookie(name: string, value: string) {
+  if (typeof document === "undefined") return
+  document.cookie = `${name}=${value}; path=/; max-age=${COOKIE_MAX_AGE}`
+}
+
+type SpacesAwareSidebarTriggerProps = React.ComponentProps<typeof SidebarTrigger> & {
+  onManualToggle?: (willBeOpen: boolean) => void
+}
+
+function SpacesAwareSidebarTrigger({
+  onManualToggle,
+  onClick,
+  ...props
+}: SpacesAwareSidebarTriggerProps) {
+  const { open } = useSidebar()
+  return (
+    <SidebarTrigger
+      onClick={(event) => {
+        onClick?.(event)
+        // Toggle will invert the current state
+        onManualToggle?.(!open)
+      }}
+      {...props}
+    />
+  )
+}
+
+type SpacesAwareSidebarRailProps = React.ComponentProps<typeof SidebarRail> & {
+  onManualToggle?: (willBeOpen: boolean) => void
+}
+
+function SpacesAwareSidebarRail({
+  onManualToggle,
+  onClick,
+  ...props
+}: SpacesAwareSidebarRailProps) {
+  const { open } = useSidebar()
+  return (
+    <SidebarRail
+      onClick={(event) => {
+        onClick?.(event)
+        // Toggle will invert the current state
+        onManualToggle?.(!open)
+      }}
+      {...props}
+    />
+  )
+}
+
 type AppSidebarProps = {
   user: {
     name: string | null
@@ -41,13 +103,61 @@ export function AppSidebar({
   spaces,
   ...props
 }: AppSidebarProps & React.ComponentProps<typeof Sidebar>) {
-  const { state } = useSidebar()
+  const { state, open, setOpen } = useSidebar()
   const pathname = usePathname()
   const isAuthRoute =
     pathname === "/auth" || pathname.startsWith("/auth/")
+  const isSpacesPage = pathname === "/spaces" || pathname.startsWith("/spaces/")
   const [isHovered, setIsHovered] = React.useState(false)
+  const [preference, setPreference] = React.useState<SidebarPreference>(() => {
+    if (typeof document === "undefined") return null
+    const cookieValue = getCookie(SPACES_SIDEBAR_PREFERENCE_COOKIE)
+    return cookieValue === "open" || cookieValue === "closed" ? cookieValue : null
+  })
+  const isAutoCollapsingRef = React.useRef(false)
 
   const showExpandTrigger = state === "collapsed" && isHovered
+
+  // Apply saved preference or auto-collapse on spaces page
+  React.useEffect(() => {
+    if (isSpacesPage) {
+      if (preference === "closed") {
+        // User prefers it closed, keep it closed
+        if (open) {
+          isAutoCollapsingRef.current = true
+          setOpen(false)
+        }
+      } else if (preference === "open") {
+        // User prefers it open, keep it open
+        if (!open) {
+          setOpen(true)
+        }
+      } else {
+        // No preference saved, auto-collapse (default behavior)
+        if (open) {
+          isAutoCollapsingRef.current = true
+          setOpen(false)
+        }
+      }
+    }
+    // Reset the flag after a brief delay
+    const timeoutId = setTimeout(() => {
+      isAutoCollapsingRef.current = false
+    }, 100)
+    return () => clearTimeout(timeoutId)
+  }, [isSpacesPage, preference, open, setOpen])
+
+  // Track when user manually changes sidebar state on spaces page
+  const handleManualToggle = React.useCallback(
+    (willBeOpen: boolean) => {
+      if (isSpacesPage && !isAutoCollapsingRef.current) {
+        const newPreference: SidebarPreference = willBeOpen ? "open" : "closed"
+        setPreference(newPreference)
+        setCookie(SPACES_SIDEBAR_PREFERENCE_COOKIE, newPreference)
+      }
+    },
+    [isSpacesPage]
+  )
 
   React.useEffect(() => {
     // Edge case: collapsing while hovered won't fire onMouseLeave, so reset hover.
@@ -103,7 +213,10 @@ export function AppSidebar({
               <div className="flex items-center gap-2">
                 <div className="relative flex aspect-square size-8 items-center justify-center">
                   {showExpandTrigger ? (
-                    <SidebarTrigger className="absolute inset-0 h-8 w-8 rounded-lg text-sidebar-primary-foreground" />
+                    <SpacesAwareSidebarTrigger
+                      onManualToggle={handleManualToggle}
+                      className="absolute inset-0 h-8 w-8 rounded-lg text-sidebar-primary-foreground"
+                    />
                   ) : (
                     <Link
                       href="/"
@@ -119,7 +232,8 @@ export function AppSidebar({
                     <span className="truncate font-semibold">Sapling</span>
                   </Link>
                   {state === "expanded" ? (
-                    <SidebarTrigger
+                    <SpacesAwareSidebarTrigger
+                      onManualToggle={handleManualToggle}
                       aria-label="Collapse Sidebar"
                       className="text-muted-foreground hover:text-foreground"
                     />
@@ -137,7 +251,7 @@ export function AppSidebar({
       <SidebarFooter>
         <NavUser user={user ?? null} />
       </SidebarFooter>
-      <SidebarRail />
+      <SpacesAwareSidebarRail onManualToggle={handleManualToggle} />
     </Sidebar>
   )
 }

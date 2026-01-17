@@ -28,24 +28,24 @@ export function ThemeProvider({
   storageKey = "sapling-theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = React.useState<Theme>(defaultTheme)
-
-  // Initialize from localStorage or system preference
-  React.useEffect(() => {
+  // Initialize theme from the already-applied class on documentElement
+  // This avoids flicker since the script in layout.tsx applies the theme before React hydrates
+  const [theme, setTheme] = React.useState<Theme>(() => {
+    if (typeof window === "undefined") return defaultTheme
     const root = window.document.documentElement
-    const storedTheme = localStorage.getItem(storageKey) as Theme | null
-
-    const systemPrefersDark =
-      typeof window !== "undefined" &&
-      window.matchMedia?.("(prefers-color-scheme: dark)").matches
-
-    const initialTheme: Theme =
-      storedTheme ?? (systemPrefersDark ? "dark" : defaultTheme)
-
-    root.classList.remove("light", "dark")
-    root.classList.add(initialTheme)
-    setTheme(initialTheme)
-  }, [storageKey, defaultTheme])
+    if (root.classList.contains("dark")) return "dark"
+    if (root.classList.contains("light")) return "light"
+    // Fallback: read from localStorage synchronously
+    try {
+      const storedTheme = localStorage.getItem(storageKey) as Theme | null
+      if (storedTheme === "dark" || storedTheme === "light") {
+        return storedTheme
+      }
+    } catch {
+      // localStorage might not be available
+    }
+    return defaultTheme
+  })
 
   // Persist and apply theme whenever it changes
   React.useEffect(() => {

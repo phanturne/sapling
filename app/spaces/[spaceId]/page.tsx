@@ -3,9 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { Navbar } from "@/components/navbar";
-import { SourcePanel } from "@/components/sources/source-panel";
+import { SpacePanels } from "@/components/spaces/space-panels";
 import { SpaceSettingsModal } from "@/components/spaces/space-settings-modal";
-import { SpaceStudyPanel } from "@/components/spaces/space-study-panel";
 import { createClient } from "@/utils/supabase/server";
 import { deleteSpace, updateSpace } from "../actions";
 import { deleteSource, uploadSource } from "./sources/actions";
@@ -153,24 +152,14 @@ export default async function SpacePage({
         </div>
       )}
 
-      <div className="flex min-h-0 flex-1">
-        {/* First panel: sources + source content */}
-        <div className="flex min-w-0 flex-1 flex-col border-r">
-          <SourcePanel
-            sources={sources}
-            spaceId={spaceId}
-            selectedSource={selectedSource}
-            isOwner={!!isOwner}
-            onUpload={uploadSource.bind(null, spaceId)}
-            deleteSourceAction={deleteSource}
-          />
-        </div>
-
-        {/* Second panel: tabs (Lessons, Chat, Flashcards), no border */}
-        <div className="min-w-0 flex-1 p-4">
-          <SpaceStudyPanel />
-        </div>
-      </div>
+      <SpacePanels
+        sources={sources}
+        spaceId={spaceId}
+        selectedSource={selectedSource}
+        isOwner={!!isOwner}
+        onUpload={uploadSource.bind(null, spaceId)}
+        deleteSourceAction={deleteSource}
+      />
     </div>
   );
 }
