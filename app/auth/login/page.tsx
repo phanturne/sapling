@@ -1,16 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { validateReturnUrl } from "@/lib/utils/auth";
 import Image from "next/image";
 import Link from "next/link";
 import { login } from "./actions";
 
 type Props = {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; returnUrl?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: Props) {
   const params = await searchParams;
   const error = params.error;
+  const returnUrl = validateReturnUrl(params.returnUrl);
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
@@ -45,6 +47,9 @@ export default async function LoginPage({ searchParams }: Props) {
 
           {/* Form */}
           <form action={login} className="space-y-5">
+            {returnUrl && (
+              <input type="hidden" name="returnUrl" value={returnUrl} />
+            )}
             <div className="space-y-2">
               <label
                 htmlFor="email"

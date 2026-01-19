@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
+import { validateReturnUrl } from "@/lib/utils/auth";
 import { createClient } from "@/utils/supabase/server";
 
 export async function login(formData: FormData) {
@@ -15,12 +16,19 @@ export async function login(formData: FormData) {
     password: formData.get("password") as string,
   };
 
+  const rawReturnUrl = formData.get("returnUrl") as string | null;
+  const returnUrl = validateReturnUrl(rawReturnUrl);
+
   const { error } = await supabase.auth.signInWithPassword(data);
 
   if (error) {
-    redirect("/auth/login?error=invalid_credentials");
+    const redirectUrl = returnUrl
+      ? `/auth/login?error=invalid_credentials&returnUrl=${encodeURIComponent(returnUrl)}`
+      : "/auth/login?error=invalid_credentials";
+    redirect(redirectUrl);
   }
 
   revalidatePath("/", "layout");
-  redirect("/");
+  const finalUrl = returnUrl || "/";
+  redirect(finalUrl);
 }

@@ -41,33 +41,46 @@ export function SpaceSettingsModal({
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
-  const handleUpdate = async (formData: FormData) => {
-    const result = await updateSpace(spaceId, formData);
-    if (result.success) {
-      toast.success("Space updated successfully");
-      router.refresh();
-      setOpen(false);
-    } else {
-      const errorMessages: Record<string, string> = {
-        validation_failed: "Invalid input. Please check your form data.",
-        update_failed: "Failed to update space",
-        not_found: "Space not found",
-      };
-      toast.error(errorMessages[result.error] || "An error occurred");
+  const handleUpdate = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const formData = new FormData(e.currentTarget);
+
+    try {
+      const result = await updateSpace(spaceId, formData);
+      if (result.success) {
+        toast.success("Space updated successfully");
+        router.refresh();
+        setOpen(false);
+      } else {
+        const errorMessages: Record<string, string> = {
+          validation_failed: "Invalid input. Please check your form data.",
+          update_failed: "Failed to update space",
+          not_found: "Space not found",
+        };
+        toast.error(errorMessages[result.error] || "An error occurred");
+      }
+    } catch (error) {
+      console.error("Update failed:", error);
+      toast.error("An unexpected error occurred");
     }
   };
 
   const handleDelete = async () => {
-    const result = await deleteSpace(spaceId);
-    if (result.success) {
-      toast.success("Space deleted successfully");
-      router.push("/");
-    } else {
-      const errorMessages: Record<string, string> = {
-        delete_failed: "Failed to delete space",
-        not_found: "Space not found",
-      };
-      toast.error(errorMessages[result.error] || "An error occurred");
+    try {
+      const result = await deleteSpace(spaceId);
+      if (result.success) {
+        toast.success("Space deleted successfully");
+        router.push("/");
+      } else {
+        const errorMessages: Record<string, string> = {
+          delete_failed: "Failed to delete space",
+          not_found: "Space not found",
+        };
+        toast.error(errorMessages[result.error] || "An error occurred");
+      }
+    } catch (error) {
+      console.error("Delete failed:", error);
+      toast.error("An unexpected error occurred");
     }
   };
 
@@ -87,7 +100,7 @@ export function SpaceSettingsModal({
           <DialogTitle>Space settings</DialogTitle>
         </DialogHeader>
 
-        <form action={handleUpdate} className="space-y-4">
+        <form onSubmit={handleUpdate} className="space-y-4">
           <div>
             <label
               htmlFor="settings-title"

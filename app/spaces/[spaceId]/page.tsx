@@ -1,8 +1,8 @@
 import { Globe, Lock } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
 
 import { Navbar } from "@/components/navbar";
+import { SpaceError } from "@/components/spaces/space-error";
 import { SpacePanels } from "@/components/spaces/space-panels";
 import { SpaceSettingsModal } from "@/components/spaces/space-settings-modal";
 import { createClient } from "@/utils/supabase/server";
@@ -31,16 +31,24 @@ export default async function SpacePage({
     .eq("id", spaceId)
     .single();
 
+  const isAuthenticated = !!user;
+  const returnUrl = `/spaces/${spaceId}`;
+
+  // Space doesn't exist or user doesn't have access (combined message for security)
   if (spaceError || !space) {
-    redirect("/spaces?error=not_found");
+    return <SpaceError isAuthenticated={isAuthenticated} returnUrl={returnUrl} />;
   }
 
-  if (!user && space.visibility !== "public") {
-    redirect("/auth/login");
-  }
-
-  if (user && space.user_id !== user.id && space.visibility !== "public") {
-    redirect("/spaces?error=forbidden");
+  // Space exists but is private
+  if (space.visibility !== "public") {
+    // User not authenticated - show login prompt
+    if (!user) {
+      return <SpaceError isAuthenticated={false} returnUrl={returnUrl} />;
+    }
+    // User authenticated but not owner - show access denied
+    if (space.user_id !== user.id) {
+      return <SpaceError isAuthenticated={true} returnUrl={returnUrl} />;
+    }
   }
 
   const isOwner = user && space.user_id === user.id;
