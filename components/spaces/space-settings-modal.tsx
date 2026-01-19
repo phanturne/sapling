@@ -1,7 +1,9 @@
 "use client";
 
 import { Settings } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -21,8 +23,13 @@ type Space = {
 type SpaceSettingsModalProps = {
   space: Space;
   spaceId: string;
-  updateSpace: (spaceId: string, formData: FormData) => Promise<void>;
-  deleteSpace: (spaceId: string) => Promise<void>;
+  updateSpace: (
+    spaceId: string,
+    formData: FormData
+  ) => Promise<{ success: true } | { success: false; error: string }>;
+  deleteSpace: (
+    spaceId: string
+  ) => Promise<{ success: true } | { success: false; error: string }>;
 };
 
 export function SpaceSettingsModal({
@@ -32,6 +39,37 @@ export function SpaceSettingsModal({
   deleteSpace,
 }: SpaceSettingsModalProps) {
   const [open, setOpen] = useState(false);
+  const router = useRouter();
+
+  const handleUpdate = async (formData: FormData) => {
+    const result = await updateSpace(spaceId, formData);
+    if (result.success) {
+      toast.success("Space updated successfully");
+      router.refresh();
+      setOpen(false);
+    } else {
+      const errorMessages: Record<string, string> = {
+        validation_failed: "Invalid input. Please check your form data.",
+        update_failed: "Failed to update space",
+        not_found: "Space not found",
+      };
+      toast.error(errorMessages[result.error] || "An error occurred");
+    }
+  };
+
+  const handleDelete = async () => {
+    const result = await deleteSpace(spaceId);
+    if (result.success) {
+      toast.success("Space deleted successfully");
+      router.push("/");
+    } else {
+      const errorMessages: Record<string, string> = {
+        delete_failed: "Failed to delete space",
+        not_found: "Space not found",
+      };
+      toast.error(errorMessages[result.error] || "An error occurred");
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -49,7 +87,7 @@ export function SpaceSettingsModal({
           <DialogTitle>Space settings</DialogTitle>
         </DialogHeader>
 
-        <form action={updateSpace.bind(null, spaceId)} className="space-y-4">
+        <form action={handleUpdate} className="space-y-4">
           <div>
             <label
               htmlFor="settings-title"
@@ -112,11 +150,9 @@ export function SpaceSettingsModal({
           <h3 className="mb-2 text-sm font-semibold text-destructive">
             Danger zone
           </h3>
-          <form action={deleteSpace.bind(null, spaceId)}>
-            <Button type="submit" variant="destructive">
-              Delete space
-            </Button>
-          </form>
+          <Button type="button" variant="destructive" onClick={handleDelete}>
+            Delete space
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

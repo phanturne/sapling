@@ -175,7 +175,7 @@ describe("spaces actions", () => {
       expect(redirect).toHaveBeenCalledWith("/auth/login");
     });
 
-    it("redirects with error when user does not own the space", async () => {
+    it("returns error when user does not own the space", async () => {
       const client: Mocked<ReturnType<typeof createMockSupabaseClient>> =
         createMockSupabaseClient() as Mocked<
           ReturnType<typeof createMockSupabaseClient>
@@ -199,11 +199,11 @@ describe("spaces actions", () => {
       const formData = new FormData();
       formData.set("title", "Updated Space");
 
-      await expect(updateSpace("space-1", formData)).rejects.toThrow("REDIRECT");
-      expect(redirect).toHaveBeenCalledWith("/spaces/space-1?error=not_found");
+      const result = await updateSpace("space-1", formData);
+      expect(result).toEqual({ success: false, error: "not_found" });
     });
 
-    it("redirects with error when validation fails", async () => {
+    it("returns error when validation fails", async () => {
       const client: Mocked<ReturnType<typeof createMockSupabaseClient>> =
         createMockSupabaseClient() as Mocked<
           ReturnType<typeof createMockSupabaseClient>
@@ -227,10 +227,8 @@ describe("spaces actions", () => {
       const formData = new FormData();
       formData.set("title", "");
 
-      await expect(updateSpace("space-1", formData)).rejects.toThrow("REDIRECT");
-      expect(redirect).toHaveBeenCalledWith(
-        "/spaces/space-1?error=validation_failed",
-      );
+      const result = await updateSpace("space-1", formData);
+      expect(result).toEqual({ success: false, error: "validation_failed" });
     });
 
     it("updates space successfully with valid data", async () => {
@@ -273,8 +271,8 @@ describe("spaces actions", () => {
       formData.set("description", "Updated description");
       formData.set("visibility", "public");
 
-      await expect(updateSpace("space-1", formData)).rejects.toThrow("REDIRECT");
-      expect(redirect).toHaveBeenCalledWith("/spaces/space-1?success=1");
+      const result = await updateSpace("space-1", formData);
+      expect(result).toEqual({ success: true });
     });
   });
 
@@ -294,7 +292,7 @@ describe("spaces actions", () => {
       expect(redirect).toHaveBeenCalledWith("/auth/login");
     });
 
-    it("redirects with error when user does not own the space", async () => {
+    it("returns error when user does not own the space", async () => {
       const client: Mocked<ReturnType<typeof createMockSupabaseClient>> =
         createMockSupabaseClient() as Mocked<
           ReturnType<typeof createMockSupabaseClient>
@@ -315,8 +313,8 @@ describe("spaces actions", () => {
           error: null,
         });
 
-      await expect(deleteSpace("space-1")).rejects.toThrow("REDIRECT");
-      expect(redirect).toHaveBeenCalledWith("/spaces/space-1?error=not_found");
+      const result = await deleteSpace("space-1");
+      expect(result).toEqual({ success: false, error: "not_found" });
     });
 
     it("deletes space successfully when user owns it", async () => {
@@ -354,8 +352,8 @@ describe("spaces actions", () => {
         .mockReturnValueOnce(ownershipChain as unknown as typeof client)
         .mockReturnValueOnce(deleteChain as unknown as typeof client);
 
-      await expect(deleteSpace("space-1")).rejects.toThrow("REDIRECT");
-      expect(redirect).toHaveBeenCalledWith("/spaces?success=1");
+      const result = await deleteSpace("space-1");
+      expect(result).toEqual({ success: true });
     });
   });
 });

@@ -61,7 +61,10 @@ const updateSpaceSchema = z.object({
   visibility: z.enum(["private", "public"]).default("private"),
 });
 
-export async function updateSpace(spaceId: string, formData: FormData) {
+export async function updateSpace(
+  spaceId: string,
+  formData: FormData
+): Promise<{ success: true } | { success: false; error: string }> {
   const supabase = await createClient();
 
   const {
@@ -80,7 +83,7 @@ export async function updateSpace(spaceId: string, formData: FormData) {
     .single();
 
   if (spaceError || !space || space.user_id !== user.id) {
-    redirect(`/spaces/${spaceId}?error=not_found`);
+    return { success: false, error: "not_found" };
   }
 
   const rawData = {
@@ -91,7 +94,7 @@ export async function updateSpace(spaceId: string, formData: FormData) {
 
   const validation = updateSpaceSchema.safeParse(rawData);
   if (!validation.success) {
-    redirect(`/spaces/${spaceId}?error=validation_failed`);
+    return { success: false, error: "validation_failed" };
   }
 
   const { title, description, visibility } = validation.data;
@@ -106,15 +109,17 @@ export async function updateSpace(spaceId: string, formData: FormData) {
     .eq("id", spaceId);
 
   if (error) {
-    redirect(`/spaces/${spaceId}?error=update_failed`);
+    return { success: false, error: "update_failed" };
   }
 
   revalidatePath("/spaces");
   revalidatePath(`/spaces/${spaceId}`);
-  redirect(`/spaces/${spaceId}?success=1`);
+  return { success: true };
 }
 
-export async function deleteSpace(spaceId: string) {
+export async function deleteSpace(
+  spaceId: string
+): Promise<{ success: true } | { success: false; error: string }> {
   const supabase = await createClient();
 
   const {
@@ -133,16 +138,16 @@ export async function deleteSpace(spaceId: string) {
     .single();
 
   if (spaceError || !space || space.user_id !== user.id) {
-    redirect(`/spaces/${spaceId}?error=not_found`);
+    return { success: false, error: "not_found" };
   }
 
   const { error } = await supabase.from("spaces").delete().eq("id", spaceId);
 
   if (error) {
-    redirect(`/spaces/${spaceId}?error=delete_failed`);
+    return { success: false, error: "delete_failed" };
   }
 
   revalidatePath("/spaces");
-  redirect("/spaces?success=1");
+  return { success: true };
 }
 

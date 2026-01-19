@@ -56,33 +56,37 @@ test.describe("Spaces", () => {
     await page.getByRole("button", { name: /Create Space/i }).click();
 
     await page.waitForURL(/\/spaces\/[^/]+$/, { timeout: 5000 });
-    const spaceUrl = page.url();
-    const spaceId = spaceUrl.split("/").pop()!;
 
-    // Update the space
+    // Open settings modal
+    await page.getByRole("button", { name: /Space settings/i }).click();
+
+    // Wait for modal to be visible
+    await expect(page.getByRole("dialog")).toBeVisible();
+
+    // Update the space - use the specific input IDs from the modal
     await page.getByLabel(/Title/i).fill("Updated Space Title");
     await page.getByLabel(/Description/i).fill("Updated description");
     await page.getByLabel(/Visibility/i).selectOption("public");
 
-    await page.getByRole("button", { name: /Update Space/i }).click();
+    // Submit the form
+    await page.getByRole("button", { name: /Update/i }).click();
 
-    // Should redirect with success - wait for navigation or check current URL
-    await page.waitForLoadState("networkidle");
-    // Check if we're already on the correct URL or wait for navigation
-    const currentUrl = new URL(page.url());
-    if (currentUrl.pathname !== `/spaces/${spaceId}` || currentUrl.searchParams.get("success") !== "1") {
-      await page.waitForURL(
-        (url) => url.pathname === `/spaces/${spaceId}` && url.searchParams.get("success") === "1",
-        { timeout: 10000 },
-      );
-    }
-
-    // Verify success message appears
+    // Verify toast notification appears
     await expect(
       page.getByText(/Space updated successfully/i),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 5000 });
 
-    // Verify form values were updated
+    // Wait for modal to close (dialog should not be visible)
+    await expect(page.getByRole("dialog")).not.toBeVisible({ timeout: 3000 });
+
+    // Wait for page to refresh
+    await page.waitForLoadState("networkidle");
+
+    // Re-open modal to verify form values were updated
+    await page.getByRole("button", { name: /Space settings/i }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    
+    // Verify the updated values
     await expect(page.getByLabel(/Title/i)).toHaveValue("Updated Space Title");
     await expect(page.getByLabel(/Description/i)).toHaveValue(
       "Updated description",
@@ -106,16 +110,20 @@ test.describe("Spaces", () => {
 
     await page.waitForURL(/\/spaces\/[^/]+$/, { timeout: 5000 });
 
+    // Open settings modal first
+    await page.getByRole("button", { name: /Space settings/i }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+
     // Delete the space
-    await page.getByRole("button", { name: /Delete Space/i }).click();
+    await page.getByRole("button", { name: /Delete space/i }).click();
 
-    // Should redirect to spaces list with success
-    await page.waitForURL("/spaces?success=1", { timeout: 5000 });
-
-    // Verify success message appears
+    // Verify toast notification appears
     await expect(
       page.getByText(/Space deleted successfully/i),
-    ).toBeVisible();
+    ).toBeVisible({ timeout: 5000 });
+
+    // Should redirect to home page (since /spaces redirects to /)
+    await page.waitForURL("/", { timeout: 5000 });
 
     await signOut(page);
   });

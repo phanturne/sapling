@@ -91,7 +91,6 @@ export default async function SpacePage({
   };
 
   const successMessages: Record<string, string> = {
-    "1": "Space updated successfully",
     deleted: "Source deleted",
   };
 
