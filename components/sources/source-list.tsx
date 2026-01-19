@@ -14,11 +14,14 @@ import type { Database } from "@/supabase/types";
 
 type Source = Database["public"]["Tables"]["sources"]["Row"];
 
+// Source list item - excludes content field for performance (content can be huge)
+type SourceListItem = Omit<Source, "content">;
+
 type SourceListProps = {
-  sources: Source[];
+  sources: SourceListItem[];
   spaceId: string;
   /** Override the default link for each source (e.g. for panel selection mode). */
-  itemHref?: (source: Source) => string;
+  itemHref?: (source: SourceListItem) => string;
   /** When set, the matching source gets selected styling. */
   selectedSourceId?: string | null;
   /** Whether the user is the owner (shows delete option) */

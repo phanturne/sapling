@@ -5,9 +5,13 @@ import { Navbar } from "@/components/navbar";
 import { SpaceError } from "@/components/spaces/space-error";
 import { SpacePanels } from "@/components/spaces/space-panels";
 import { SpaceSettingsModal } from "@/components/spaces/space-settings-modal";
+import type { Database } from "@/supabase/types";
 import { createClient } from "@/utils/supabase/server";
 import { deleteSpace, updateSpace } from "../actions";
 import { deleteSource, uploadSource } from "./sources/actions";
+
+type Source = Database["public"]["Tables"]["sources"]["Row"];
+type SourceListItem = Omit<Source, "content">;
 
 type SpacePageProps = {
   params: Promise<{ spaceId: string }>;
@@ -53,13 +57,20 @@ export default async function SpacePage({
 
   const isOwner = user && space.user_id === user.id;
 
+  const params_search = (await searchParams) ?? {};
+  const error = typeof params_search.error === "string" ? params_search.error : null;
+  const success = typeof params_search.success === "string" ? params_search.success : null;
+  const sourceId = typeof params_search.sourceId === "string" ? params_search.sourceId : null;
+
+  // Fetch sources list without content field (optimization: content can be huge)
+  // Only fetch fields needed for the list display
   const { data: sourcesData, error: sourcesError } = await supabase
     .from("sources")
-    .select("*")
+    .select("id, space_id, title, status, source_type, file_path, file_type, file_size, source_url, metadata, created_at, updated_at")
     .eq("space_id", spaceId)
     .order("updated_at", { ascending: false });
 
-  const sources = sourcesData ?? [];
+  const sources: SourceListItem[] = (sourcesData ?? []) as SourceListItem[];
 
   if (sourcesError) {
     return (
@@ -79,14 +90,17 @@ export default async function SpacePage({
     );
   }
 
-  const params_search = (await searchParams) ?? {};
-  const error = typeof params_search.error === "string" ? params_search.error : null;
-  const success = typeof params_search.success === "string" ? params_search.success : null;
-  const sourceId = typeof params_search.sourceId === "string" ? params_search.sourceId : null;
-
-  const selectedSource = sourceId
-    ? sources.find((s) => s.id === sourceId) ?? null
-    : null;
+  // Fetch full source with content if one is selected (for SourceViewer)
+  let selectedSource = null;
+  if (sourceId) {
+    const { data: fullSource } = await supabase
+      .from("sources")
+      .select("*")
+      .eq("id", sourceId)
+      .eq("space_id", spaceId)
+      .single();
+    selectedSource = fullSource ?? null;
+  }
 
   const errorMessages: Record<string, string> = {
     validation_failed: "Invalid input. Please check your form data.",

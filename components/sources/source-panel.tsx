@@ -13,8 +13,11 @@ import type { Database } from "@/supabase/types";
 
 type Source = Database["public"]["Tables"]["sources"]["Row"];
 
+// Source list item - excludes content field for performance (content can be huge)
+type SourceListItem = Omit<Source, "content">;
+
 type SourcePanelProps = {
-  sources: Source[];
+  sources: SourceListItem[];
   spaceId: string;
   selectedSource: Source | null;
   isOwner: boolean;
